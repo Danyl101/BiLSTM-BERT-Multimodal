@@ -33,7 +33,8 @@ KeyStone/
 
 ## Block Diagram
 
-<img width="688" height="768" alt="Screenshot 2025-08-20 181914" src="https://github.com/user-attachments/assets/a06ff134-4103-4b66-b0f0-5218d2dfc974" />
+<img width="656" height="828" alt="Screenshot 2025-08-20 182455" src="https://github.com/user-attachments/assets/13294c7b-0968-49a1-b4fb-ee84e2a59408" />
+
 
 ---
 

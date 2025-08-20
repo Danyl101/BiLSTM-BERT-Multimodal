@@ -31,6 +31,10 @@ KeyStone/
 └── README.md             # Project documentation
 ````
 
+## Block Diagram
+
+<img width="688" height="768" alt="Screenshot 2025-08-20 181914" src="https://github.com/user-attachments/assets/a06ff134-4103-4b66-b0f0-5218d2dfc974" />
+
 ---
 
 ## ⚙️ Setup Instructions

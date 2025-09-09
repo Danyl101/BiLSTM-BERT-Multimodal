@@ -8,6 +8,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from config_loader import config
 
+logger=logging.getLogger("Extract")
+
 
 headers = {
     "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/91.0.4472.124 Safari/537.36",
@@ -16,16 +18,6 @@ headers = {
     "Accept-Encoding": "gzip, deflate, br",
 }  #Mimics real browser request
 
-extract_log=logging.getLogger("extractor")
-extract_log.setLevel(logging.INFO)
-
-#Defines the logging function ,or how logs will be displayed 
-logging.basicConfig(
-    filename="Logs/Loader.log",
-    level=logging.INFO,  # Change to DEBUG for more detail
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filemode='w'
-)
 
 def sanitize_filename(name):
     # Remove any character that's not alphanumeric, dash, underscore, or space
@@ -37,12 +29,12 @@ def sanitize_filename(name):
 def save_file(title, full_content):
     try:
         if not  full_content.strip():
-            logging.info(f"No content found for: {title}") #Log message
-            logging.debug(traceback.format_exc())
+            logger.info(f"No content found for: {title}") #Log message
+            logger.debug(traceback.format_exc())
             return None
     except Exception as e:
-        logging.error(f"Content cleaning failed : {e}")
-        logging.debug(traceback.format_exc())
+        logger.error(f"Content cleaning failed : {e}")
+        logger.debug(traceback.format_exc())
 
     try:
         # Save as .txt file
@@ -51,11 +43,11 @@ def save_file(title, full_content):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(full_content) #Writes content to the file
 
-        logging.info(f"Saved: {filename}") #Log message
+        logger.info(f"Saved: {filename}") #Log message
         return full_content
     except Exception as e:
-        logging.error(f"Error saving file {filename} :{e}")
-        
+        logger.error(f"Error saving file {filename} :{e}")
+
 
 def setup_driver(): #Setup Chrome WebDriver
     chrome_options=Options()
@@ -69,5 +61,5 @@ def is_browser_alive(driver): #Checks if browser is still running
         driver.title
         return True
     except:
-        logging.debug(traceback.format_exc())
+        logger.debug(traceback.format_exc())
         return False

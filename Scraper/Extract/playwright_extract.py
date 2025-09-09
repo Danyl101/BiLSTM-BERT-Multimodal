@@ -5,15 +5,18 @@ import logging
 from playwright.async_api import async_playwright
 
 # Your custom utility
-from .utils import save_file,logging
+from .utils import save_file
+
+logger=logging.getLogger("Extract")
+
 
 async def scrape_with_timeout(url, title ,timeout=60):
     try:
         await asyncio.wait_for(playwright_article_text(url, title), timeout=timeout)#Sets a timeout for the scraping operation
     except asyncio.TimeoutError:
-        logging.error(f"Timeout while scraping {url} after {timeout}s.") #Log message
+        logger.error(f"Timeout while scraping {url} after {timeout}s.") #Log message
     except Exception as e:
-        logging.error(f"Unhandled exception during scraping {url}: {e}", exc_info=True) #Log message
+        logger.error(f"Unhandled exception during scraping {url}: {e}", exc_info=True) #Log message
 
 # Wrapper for synchronous use
 def get_article_text_playwright(url, title,timeout=60):
@@ -21,7 +24,7 @@ def get_article_text_playwright(url, title,timeout=60):
 
 # Async article text extractor
 async def playwright_article_text(url, title):
-    logging.info(f"Starting Playwright scraping for: {url}")
+    logger.info(f"Starting Playwright scraping for: {url}")
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True) #Launches headless browser
@@ -30,33 +33,33 @@ async def playwright_article_text(url, title):
             try:
                 await page.goto(url, timeout=10000, wait_until="domcontentloaded") #Waits for page to load
             except TimeoutError:
-                logging.warning(f"Timeout at 10s, retrying with 30s...")
+                logger.warning(f"Timeout at 10s, retrying with 30s...")
                 try:
                     await page.goto(url, timeout=30000, wait_until="domcontentloaded") #Retries the page with a longer timeout
                 except Exception as e:
-                    logging.error(f"Failed even after retry: {e}")
+                    logger.error(f"Failed even after retry: {e}")
 
-                logging.error(f"Error loading page: {e}")
+                logger.error(f"Error loading page: {e}")
                 await browser.close() #Closes the browser
                 return
 
             # 1. Grab article or body text
             try:
                 body_text = await page.locator("article").inner_text() #Locates article tag  and extracts the text inside it
-                logging.info("Extracted text from <article>.") #Log message
+                logger.info("Extracted text from <article>.") #Log message
             except Exception:
                 try:
                     body_text = await page.locator("body").inner_text() #Fallsback to body and extracts the text inside it
-                    logging.warning("Fell back to extracting text from <body>.") #Log message
+                    logger.warning("Fell back to extracting text from <body>.") #Log message
                 except Exception as e:
-                    logging.error(f"Failed to extract any main text: {e}") #Log message
+                    logger.error(f"Failed to extract any main text: {e}") #Log message
                     body_text = "" #Resets body text if extraction fails
 
             # 2. Heuristic extracts long quoted sections from <div> tags
             extracted_script_texts = [] #Initializes a list to store extracted texts
             try:
-                script_tags = await page.locator("div").all() #Locates all div tags 
-                logging.info(f"Found {len(script_tags)} <div> tags to scan.")
+                script_tags = await page.locator("div").all() #Locates all div tags
+                logger.info(f"Found {len(script_tags)} <div> tags to scan.")
 
                 for tag in script_tags:
                     try:
@@ -68,23 +71,23 @@ async def playwright_article_text(url, title):
                     except Exception:
                         continue
             except Exception as e:
-                logging.error(f"Error while parsing <div> tags: {e}")
+                logger.error(f"Error while parsing <div> tags: {e}")
 
             await browser.close()
 
             # Selects either the body text or the text inside the div tags
             if extracted_script_texts:
                 final_content = "\n\n".join(dict.fromkeys(extracted_script_texts[:3]))  # Remove duplicates and takes content inside divs as final
-                logging.info(f"Extracted {len(extracted_script_texts[:3])} large quoted sections.")
+                logger.info(f"Extracted {len(extracted_script_texts[:3])} large quoted sections.")
             elif body_text and len(body_text) > 500:
                 final_content = body_text # Selects body text if it is long enough
-                logging.info("Used fallback body text.")
+                logger.info("Used fallback body text.")
             else:
                 final_content = "[Article text not found]"
-                logging.warning("No usable content found.")
+                logger.warning("No usable content found.")
 
-            save_file(title, final_content) #Saves the content to a file 
-            logging.info(f"Saved article to file: {title}")
+            save_file(title, final_content) #Saves the content to a file
+            logger.info(f"Saved article to file: {title}")
     except Exception as e:
-        logging.critical(f"Unhandled exception in Playwright article fetcher: {e}", exc_info=True)
-        
+        logger.critical(f"Unhandled exception in Playwright article fetcher: {e}", exc_info=True)
+

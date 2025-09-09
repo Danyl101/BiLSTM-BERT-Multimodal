@@ -2,7 +2,7 @@
 
                             BASH LINES FOR UPDATING REPO
                     
-git add  BiLSTM_Model BiLSTM_Preprocess BERT_Model Checkpoints BERT_Preprocess Scraper frontend .gitignore Documentation Datasets LSTM_Inference Journal.md requirements.txt config_loader.py config.yaml Bashlines Tailwind_classes.md README.md LICENSE.md
+git add  BiLSTM_Model BiLSTM_Preprocess BERT_Model Checkpoints BERT_Preprocess Scraper frontend .gitignore Documentation Datasets LSTM_Inference Journal.md requirements.txt config_loader.py config.yaml Bashlines Tailwind_classes.md logging.yaml logging_loader.py
 git commit -m
 git pull origin main --rebase 
 git push origin main

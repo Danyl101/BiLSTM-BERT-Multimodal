@@ -8,15 +8,17 @@ from selenium.common.exceptions import TimeoutException, StaleElementReferenceEx
 from webdriver_manager.chrome import ChromeDriverManager
 
 from urllib.parse import urlparse
-from .utils import write_to_json,is_browser_alive,setup_driver,goodlist,logging
+from .utils import write_to_json,is_browser_alive,setup_driver,goodlist
 from .robot import can_scrape
+
+logger=logging.getLogger("Scraper")
 
 
 def scroll_and_scrape(driver, url, max_scrolls=10):#Function to scroll and scrape articles from a given URL
     try:
         driver.get(url) 
     except TimeoutException: #Handles site timeouts 
-        logging.error(f"Timeout while loading {url}, retrying...")
+        logger.error(f"Timeout while loading {url}, retrying...")
         return []
       
     time.sleep(3) #Wait for dyanmic content to load 
@@ -39,7 +41,7 @@ def scroll_and_scrape(driver, url, max_scrolls=10):#Function to scroll and scrap
                 except StaleElementReferenceException: #Handles stale DOM elements
                     continue        
         except Exception:
-            logging.error("Error while fetching elements, retrying...")
+            logger.error("Error while fetching elements, retrying...")
             continue
             
         new_height = driver.execute_script("return document.body.scrollHeight") #Height of the scrolled page 
@@ -66,7 +68,7 @@ def scrape_multiple_sites(sites, max_scrolls=10): #Function to access multiple s
     all_data = []
 
     for site in sites:
-        logging.info(f"Scraping {site}...")
+        logger.info(f"Scraping {site}...")
         try:
             if not is_browser_alive(driver): #Checks if web driver is dead or alive
                 driver.quit() #Deletes existing driver 
@@ -74,7 +76,7 @@ def scrape_multiple_sites(sites, max_scrolls=10): #Function to access multiple s
             data = scroll_and_scrape(driver, site, max_scrolls=max_scrolls) #Calls scroll and scrape function
             all_data.extend(data)
         except Exception as e:
-            logging.error(f"Error scraping {site}: {e}")
+            logger.error(f"Error scraping {site}: {e}")
             continue
 
     driver.quit()

@@ -10,23 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 
 from webdriver_manager.chrome import ChromeDriverManager
-from urllib.parse import urlparse
 
-import logging
-
-print(logging.getLogger().handlers)  # root handlers
-print(logging.getLogger("scraper").handlers)
-print(logging.getLogger("flask").handlers)
-
-scraper_log=logging.getLogger("scraper")
-scraper_log.setLevel(logging.INFO)
-
-logging.basicConfig(
-    filename="Logs/Scraper.log",
-    level=logging.INFO,  # Change to DEBUG for more detail
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filemode='w'
-)
 
 PATH =config['paths']['scraping']['site_filters']
 

@@ -1,7 +1,9 @@
 import os
 from Clean_functions import is_junk_by_short_lines, regex_cleanup, clean_financial_text, spacy_clean, remove_trailing_noise   
-from utils import pipeline, save_file, logging
+from utils import pipeline, save_file
 from config_loader import config
+import logging_loader
+
 
 def run_clean():
     # Get the path to the BERT_CONTENT folder, relative to the current script

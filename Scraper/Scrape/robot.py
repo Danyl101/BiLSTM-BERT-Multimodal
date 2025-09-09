@@ -1,7 +1,9 @@
 import requests
 import urllib.robotparser
 from urllib.parse import urlparse
-from .utils import logging
+import logging
+
+logger=logging.getLogger("Scraper")
 
 def fetch_robots_txt(site):
     try:
@@ -27,6 +29,6 @@ def can_scrape(url, user_agent='*'):
         # Check if allowed
         return rp.can_fetch(user_agent, url)
     except Exception as e:
-        logging.error(f"[WARN] Could not parse robots.txt for {url}: {e}")
+        logger.error(f"[WARN] Could not parse robots.txt for {url}: {e}")
         # Assume allowed if robots.txt is unreachable
         return True

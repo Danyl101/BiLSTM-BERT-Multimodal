@@ -53,6 +53,10 @@ MSE(0.11)
 
 This model worked , and returned a good enough output temporarily leaving it ,to build the rest of the system , will come back add technical indicators and polish it once the entire system is complete 
 
+The reason the TCN kept failing was due to the fact that it was forgetting all the learned patterns in every new block , so it finds patterns in 60 day block and dosent inately keep them stored for the next block and instead begins learning new patterns , so there is no continous learning which hinders the learning ,this would work on short windows like 5-10min patterns where there is not much meaning behind the actual values and it can capture the magnitude movements well 
+
+The reason LSTM worked here was that it has a forget gate which allows it to essentially remember the key information and patterns while discarding rest and thus remembering patterns throughout training
+
 ____________________________
 
 # Iteration 1 [BILSTM]
@@ -377,6 +381,10 @@ ____________________________________
 So the entire file structure had become messy and convoluted after just adding more and more without any thought , so decided to clean up the entire file structure ,primarily datasets folder ,some hardcoded file structures especially 'with open' lines broke , so decided to implement a yaml config file since that would be needed in future and i would learn a new important thing in keeping folder structure clean and reducing failure points due to hardcoded values
 
 ____________________________________
+
+# Iteration 2 [CLEANUP]
+
+
 
 
 

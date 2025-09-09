@@ -14,42 +14,44 @@ from selenium.webdriver.support import expected_conditions as EC
 from newspaper import Article
 
 # Assuming these are defined in your own codebase
-from .utils import sanitize_filename, save_file,headers,logging
+from .utils import sanitize_filename, save_file,headers
 
 from .playwright_extract import get_article_text_playwright
+
+logger=logging.getLogger("Extract")
 
 
 #A function to get advanced logs by accessing the actual url 
 def advanced_get(session, base_url, relative_url):
     try:
         full_url = urljoin(base_url, relative_url)#Base url accesses parent site , relative url accesses the exact site driver sees
-        logging.info(f"Attempting to fetch: {full_url}") #Fetches the site driver sees
+        logger.info(f"Attempting to fetch: {full_url}") #Fetches the site driver sees
 
         response = session.get(full_url, headers=headers, timeout=10, allow_redirects=True) #Creates a link between site and program to send messages across
 
         # Log basic response info
-        logging.info(f"[{response.status_code}] {full_url} (Final URL: {response.url})")
-        logging.debug(f"Headers: {response.headers}")
-        logging.debug(f"Content Preview: {response.text[:500]}")  # log first 500 characters
-        logging.debug(traceback.format_exc())
+        logger.info(f"[{response.status_code}] {full_url} (Final URL: {response.url})")
+        logger.debug(f"Headers: {response.headers}")
+        logger.debug(f"Content Preview: {response.text[:500]}")  # log first 500 characters
+        logger.debug(traceback.format_exc())
 
         # Check if it's HTML
         if "text/html" not in response.headers.get("Content-Type", ""):
-            logging.warning(f"Non-HTML content at {full_url}")
+            logger.warning(f"Non-HTML content at {full_url}")
 
         response.raise_for_status()
         return response.text #Returns the messages from the site
 
     #Log messages
     except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP Error for {full_url}: {e.response.status_code} - {e.response.reason}")
+        logger.error(f"HTTP Error for {full_url}: {e.response.status_code} - {e.response.reason}")
     except requests.exceptions.ConnectionError as e:
-        logging.error(f"Connection Error for {full_url}: {str(e)}")
+        logger.error(f"Connection Error for {full_url}: {str(e)}")
     except requests.exceptions.Timeout:
-        logging.error(f"Timeout occurred while fetching {full_url}")
+        logger.error(f"Timeout occurred while fetching {full_url}")
     except Exception as e:
-        logging.error(f"Unhandled error for {full_url}: {str(e)}")
-        logging.debug(traceback.format_exc())
+        logger.error(f"Unhandled error for {full_url}: {str(e)}")
+        logger.debug(traceback.format_exc())
 
     return None
 
@@ -63,23 +65,23 @@ def click_and_read(driver):
                 time.sleep(3) #Waits for dynamic content to load
                 break
     except Exception as e:
-        logging.error(f"Failed to click read more :{e}") #Log message
-        logging.debug(traceback.format_exc())
+        logger.error(f"Failed to click read more :{e}") #Log message
+        logger.debug(traceback.format_exc())
 
 def scroll_and_extract(driver, article, max_scrolls=10): #Function to scroll through page and extract all the content
     title = article.get('title')
     link = article.get('link')
 
     if not title or not link:
-        logging.info("Missing title or link.") #Log message
-        logging.debug(traceback.format_exc())
+        logger.info("Missing title or link.") #Log message
+        logger.debug(traceback.format_exc())
         return None
 
     try:
         driver.get(link)
     except (TimeoutException, WebDriverException):
-        logging.info(f"Failed to load: {link}") #Log message
-        logging.debug(traceback.format_exc())
+        logger.info(f"Failed to load: {link}") #Log message
+        logger.debug(traceback.format_exc())
         return None
 
     full_content="" #Initialize empty string to constantly append content through on every scroll
@@ -101,16 +103,16 @@ def scroll_and_extract(driver, article, max_scrolls=10): #Function to scroll thr
             click_and_read(driver) 
             time.sleep(2) #Waits for dynamic content to load 
         except Exception as e:
-            logging.error(f"Initial scroll failed :{e}") #Log message
-            logging.debug(traceback.format_exc())
+            logger.error(f"Initial scroll failed :{e}") #Log message
+            logger.debug(traceback.format_exc())
         # Extract text from page
         try:
             html=advanced_get(requests.Session(),base_url=link,relative_url='') #Displays the html of page after scroll
             article_content = Article(link) #Newspapery3k initializes article class with the link given        
             article_content.set_html(html)#Newspapery3k collects the html tags
         except Exception as e:
-            logging.error(f"Advanced get failed for{link} :{e}")
-            logging.debug(traceback.format_exc())
+            logger.error(f"Advanced get failed for{link} :{e}")
+            logger.debug(traceback.format_exc())
         try:
             article_content.parse() #Newspapery3k extracts the main content    
             content_piece=article_content.text.strip() #Converts text
@@ -118,8 +120,8 @@ def scroll_and_extract(driver, article, max_scrolls=10): #Function to scroll thr
                 full_content+= "+\n" +content_piece #Appends text 
                 seen_texts.add(content_piece) #Adds text
         except Exception as e:
-            logging.warning(f"Parse Failed at scroll :{e}")#Log message
-            logging.debug(traceback.format_exc())
+            logger.warning(f"Parse Failed at scroll :{e}")#Log message
+            logger.debug(traceback.format_exc())
 
         try:
             new_height = driver.execute_script("return document.body.scrollHeight") #Height of the scrolled page 
@@ -127,13 +129,13 @@ def scroll_and_extract(driver, article, max_scrolls=10): #Function to scroll thr
                 break
             last_height = new_height 
         except Exception as e:
-            logging.error(f"Height comparison failed at {last_height} :{e}")
-            logging.debug(traceback.format_exc())
+            logger.error(f"Height comparison failed at {last_height} :{e}")
+            logger.debug(traceback.format_exc())
 
     if(len(full_content)<40):
         try:
             get_article_text_playwright(link, title)
         except Exception as e:
-            logging.error(f"Playwright fallback failed for {link}: {e}")
+            logger.error(f"Playwright fallback failed for {link}: {e}")
     else:
         save_file(title, full_content) #Saves the file after every scroll

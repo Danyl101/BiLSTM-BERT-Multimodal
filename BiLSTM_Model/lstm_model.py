@@ -12,6 +12,10 @@ import torch.nn.functional as F
 from BiLSTM_Model.lstm_dataload import train_dataset, test_dataset
 from BiLSTM_Model.lstm_utils import evaluate_metrics, log_cpu_memory, device,plot
 from config_loader import config
+import logging_loader
+import logging
+
+logger=logging.getLogger("Optuna")
 
 lstm_params=config['parameters']['lstm']
    
@@ -29,8 +33,8 @@ class BiLSTMModel(nn.Module):
                 self.dropout=dropout
                 self.bidirectional=True
             except Exception as e:
-                logging.error(f"Error in BiLSTMModel: {e}")
-                logging.debug(traceback.format_exc())
+                logger.error(f"Error in BiLSTMModel: {e}")
+                logger.debug(traceback.format_exc())
             self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True,bidirectional=self.bidirectional)#Model is defined
             self.attention=Attention(hidden_size*2)
             self.dropout=nn.Dropout(dropout) #Dropout to reduce overfitting
@@ -45,15 +49,15 @@ class BiLSTMModel(nn.Module):
             return output,attn_weights,out  
 def objective(trial):
     try:
-        logging.info(f"Starting trial {trial.number}")
+        logger.info(f"Starting trial {trial.number}")
         start_time= time.time()
         #Defines the possible hyperparameters
         hidden_size = trial.suggest_categorical("hidden_size", [32, 64 ,128, 256])
         dropout = trial.suggest_categorical("dropout", [0.1, 0.2, 0.3, 0.5])
         learning_rate = trial.suggest_float("learning_rate", 1e-5, 1e-1, log=True)
         batch_size = trial.suggest_categorical("batch_size", [16, 32 ,64])
-            
-        logging.info(f"Trial #{trial.number} Start Time:{start_time}  Hyperparameters: "
+
+        logger.info(f"Trial #{trial.number} Start Time:{start_time}  Hyperparameters: "
                     f"lr={learning_rate}, dropout={dropout}, hidden_size={hidden_size}, batch_size={batch_size}")
 
         #Defines loader for train and test dataset
@@ -95,12 +99,12 @@ def objective(trial):
 
         mse, _, _, _, = evaluate_metrics(truths, preds)
         try:
-            logging.info("Directory creation underway")
+            logger.info("Directory creation underway")
             os.makedirs('Checkpoints', exist_ok=True)  # Ensure directory exists
             torch.save(model.state_dict(), f"checkpoints/best_model_trial_{trial.number}.pt")
         except Exception as e:
-            logging.error(f"Directory creation failed {e}")
-        #Acts as garbage collector and avoids optuna from taking existing values 
+            logger.error(f"Directory creation failed {e}")
+        #Acts as garbage collector and avoids optuna from taking existing values
         del model
         del optimizer 
         torch.cuda.empty_cache()  # no GPU, but still clears PyTorch cache
@@ -108,8 +112,8 @@ def objective(trial):
         return mse
         
     except Exception as e:
-        logging.error(f"Issue occured at trial {trial.number} {e}")
-        logging.error(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Issue occured at trial {trial.number} {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise
 
 #Custom Loss function
@@ -124,8 +128,8 @@ class TimeWeightedLoss(nn.Module):
                 calc_weights_mean=calc_weights.mean() 
                 return calc_weights_mean
             except Exception as e:
-                logging.error(f"Error in TimeWeightedLoss: {e}")
-                logging.debug(traceback.format_exc())
+                logger.error(f"Error in TimeWeightedLoss: {e}")
+                logger.debug(traceback.format_exc())
                 return None
 
 class Attention(nn.Module):

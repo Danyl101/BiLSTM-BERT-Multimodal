@@ -2,15 +2,16 @@ import re
 import os
 from cleantext import clean
 import spacy
+import logging
 import traceback
 
 nlp=spacy.load("en_core_web_sm") #Loading spacy language model
 
-from utils import logging
+logger=logging.getLogger("Bert_Cleaner")
 
 def regex_cleanup(text):
     try:
-        logging.info("Starting regex cleanup")
+        logger.info("Starting regex cleanup")
         # Remove author names
         text = re.sub(r'^By\s+[A-Za-z\s]+', '', text, flags=re.MULTILINE)
         
@@ -36,13 +37,13 @@ def regex_cleanup(text):
         # Strip leading/trailing whitespace
         text = text.strip()
     except Exception as e:
-        logging.error("Error occured during regex cleaning") #Log message
-        logging.error(traceback.format_exc())
+        logger.error("Error occured during regex cleaning") #Log message
+        logger.error(traceback.format_exc())
     return text
 
 def clean_financial_text(text):#Normalize with clean-text 
     try:
-        logging.info("Starting financial text cleaning")
+        logger.info("Starting financial text cleaning")
         text = clean(text,
                     fix_unicode=True,
                     to_ascii=True,
@@ -54,8 +55,8 @@ def clean_financial_text(text):#Normalize with clean-text
                     no_digits=False,       # keep digits (prices, dates)
                     no_currency_symbols=False)  # keep currency symbols
     except Exception as e:
-        logging.error("Error occurred during financial text cleaning") #Log message
-        logging.error(traceback.format_exc())
+        logger.error("Error occurred during financial text cleaning") #Log message
+        logger.error(traceback.format_exc())
     return text
 
 def spacy_clean(text):#SpaCy Cleaning
@@ -64,8 +65,8 @@ def spacy_clean(text):#SpaCy Cleaning
         sentences=(sent.text.strip() for sent in doc.sents if len(sent.text.strip())>20) #Filter out short sentences
         cleaned_text="".join(sentences) #Joins filtered sentences
     except Exception as e:
-        logging.error("Error occurred during SpaCy cleaning") #Log message
-        logging.error(traceback.format_exc())
+        logger.error("Error occurred during SpaCy cleaning") #Log message
+        logger.error(traceback.format_exc())
     return cleaned_text
 
 def is_junk_by_short_lines(text, max_words=20, threshold=4): #Checks for junk based on sequence of short lines
@@ -81,8 +82,8 @@ def is_junk_by_short_lines(text, max_words=20, threshold=4): #Checks for junk ba
             else:
                 consecutive_count=0
     except Exception as e:
-        logging.error("Error during junk file cleaning")
-        logging.error(traceback.format_exc())
+        logger.error("Error during junk file cleaning")
+        logger.error(traceback.format_exc())
     if(max_count <= threshold): #Checks if sequence of short lines are below threshold
         return text
     else:
@@ -105,22 +106,22 @@ def remove_trailing_noise(text,window=200,trim_chars=20): #Removes Trailing Spac
         try:
             idx = text_snippet.find(phrase) #Finds index of phrase
             abs_idx=snippet_start+idx #Finds absolute index from whole text
-            logging.info("Phrase found")
+            logger.info("Phrase found")
             if abs_idx != -1:
                 print(abs_idx)
 
                 # Calculate slice boundaries
                 start = max(abs_idx - trim_chars, 0) #Finds the start of slicing
                 end = min(abs_idx + len(phrase) + trim_chars, len(text)) #Finds the end of slicing
-                logging.info("Start and end of slicing identified")
-                
+                logger.info("Start and end of slicing identified")
+
                 # Remove snippet around the noise phrase
                 new_text = text[:start] + text[end:] #Slices the full text
-                logging.info("Slicing done ")
+                logger.info("Slicing done ")
                 return new_text  # remove just the first found phrase and return
         except Exception as e:
-            logging.error("Indexing failed during trailing")
-            logging.error(traceback.format_exc())
+            logger.error("Indexing failed during trailing")
+            logger.error(traceback.format_exc())
 
 
 

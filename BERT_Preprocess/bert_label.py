@@ -9,7 +9,10 @@ import csv
 import traceback
 import torch.nn.functional as F
 
-from utils import logging
+import logging_loader
+import logging
+
+logger=logging.getLogger("Bert_Label")
 
 torch.manual_seed(42) #Sets seed to reduce randomness
 
@@ -40,10 +43,10 @@ def text_encoding(text,max_text=1500,step=1000): #Function to encode text dynami
             text_snippet=text[start_idx:start_idx+max_text] #Splits text into smaller chunks 
             encoding=tokenizer(text_snippet,padding=True,truncation=True,max_length=512,return_tensors="pt") #Encodes the split text
             all_encoding.append(encoding) #Appends all encoded values 
-        logging.info("Text encoding execution successful")
+        logger.info("Text encoding execution successful")
     except Exception as e:
-        logging.error("Execution failed text encoding")
-        logging.error(traceback.format_exc())
+        logger.error("Execution failed text encoding")
+        logger.error(traceback.format_exc())
     return all_encoding
 
 def logits_pass(encodings): #Function to calculate sentiment of a text chunk
@@ -64,8 +67,8 @@ def logits_pass(encodings): #Function to calculate sentiment of a text chunk
         pred_idx=torch.argmax(probs).item() #Returns the max sentiment value from chunk alongside its index
         return class_names[pred_idx], probs.cpu().numpy() #Returns the index and the probability
     except Exception as e:
-        logging.error("Execution failed at logits pass")
-        logging.error(traceback.format_exc())   
+        logger.error("Execution failed at logits pass")
+        logger.error(traceback.format_exc())   
 
 def max_pooling(probs):
     try:
@@ -74,11 +77,11 @@ def max_pooling(probs):
         predicted_class_probs=torch.argmax(max_vals).item()
         
         predicted_label_probs = class_names[predicted_class_probs]
-        logging.info("Average pooling execution successful")
+        logger.info("Average pooling execution successful")
     except Exception as e:
-        logging.error("Execution failed at average pooling")
-        logging.error(traceback.format_exc())
-    
+        logger.error("Execution failed at average pooling")
+        logger.error(traceback.format_exc())
+
     return predicted_label_probs
 
 def label_to_csv(filepath,label,content_dir,output_csv): #Saves the textfile and its corresponding sentiment to csv
@@ -86,11 +89,11 @@ def label_to_csv(filepath,label,content_dir,output_csv): #Saves the textfile and
         with open(output_csv,"a",newline='')as csvfile: 
             writer=csv.writer(csvfile) 
             writer.writerow([filepath,label])  #Writes the data into csv row
-        logging.info("CSV writing")
+        logger.info("CSV writing")
     except Exception as e:
-        logging.error("Exectuion failed at writing into csv")
-        logging.error(traceback.format_exc())
-    
+        logger.error("Execution failed at writing into csv")
+        logger.error(traceback.format_exc())
+
 def label_extract(Directory_name,csvpath):
     content_dir=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..',Directory_name) #Acquires folder containing all extracted txt files
     for filepath in os.listdir(content_dir): 

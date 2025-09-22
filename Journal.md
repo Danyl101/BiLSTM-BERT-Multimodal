@@ -384,6 +384,18 @@ ____________________________________
 
 # Iteration 2 [CLEANUP]
 
+So i resoled the log issues by removing all hardcoded logs and creating a seperate yaml file for its working , so now there are two primary yaml files , also removed the redundant buttons present in react , where each button had its own run functions , this was replaced with a dynamic function which created the buttons on loading and then merged them with their respective functionality when site loads 
+
+____________________________________
+
+# Iteration 1 [Docker]
+
+So i implemented docker to make the product implementable in various environments , initially it consumed a lot of space due to the adding of ml libraries like tensorflow and torch ,which bloated the docker file , so instead only added the scraper functions to docker , since those were the only ones with frontend integration
+
+____________________________________
+
+
+
 
 
 

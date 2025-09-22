@@ -5,6 +5,8 @@ python -m venv venv
 
 venv\Scripts\activate
 
+py -3.10 -m venv venv 
+
 deactivate 
 
 python -m pip install  

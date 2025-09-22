@@ -11,6 +11,9 @@ import torch.nn.functional as F
 
 import logging_loader
 import logging
+from config_loader import config
+
+from .utils import text_encoding
 
 logger=logging.getLogger("Bert_Label")
 
@@ -20,34 +23,11 @@ device="cuda" if torch.cuda.is_available() else "cpu"
 
 class_names=["negative","neutral","positive"] #Defines the sentiment classes
 
-class BERT_Classifier(nn.Module):
-    def __init__(self,num_classes=2,dropout=0.3,pretrained_model="yiyanghkust/finbert-tone"): #Defines bert encoder without classification
-        super(BERT_Classifier,self).__init__()
-        self.num_classes=num_classes
-        self.dropout=nn.Dropout(dropout)
-        self.bert=BertModel.from_pretrained(pretrained_model)
-        self.classifier=nn.Linear(self.bert.config.hidden_size,num_classes)
-        
-    def forward(self,input_ids,attention_mask):
-        output=self.bert(attention_mask=attention_mask,input_ids=input_ids)
-        pooled_output=output.pooler_output
-        dropped=self.dropout(pooled_output)
-        logits=self.classifier(dropped)
-        probs = torch.softmax(logits, dim=1)
-        return probs
-    
-def text_encoding(text,max_text=1500,step=1000): #Function to encode text dynamically
-    try:
-        all_encoding=[]
-        for start_idx in range(0,len(text),step):
-            text_snippet=text[start_idx:start_idx+max_text] #Splits text into smaller chunks 
-            encoding=tokenizer(text_snippet,padding=True,truncation=True,max_length=512,return_tensors="pt") #Encodes the split text
-            all_encoding.append(encoding) #Appends all encoded values 
-        logger.info("Text encoding execution successful")
-    except Exception as e:
-        logger.error("Execution failed text encoding")
-        logger.error(traceback.format_exc())
-    return all_encoding
+paraphrased_path=config['paths']['bert']['raw_text_data']['paraphrased_data_folder']
+original_path=config['paths']['bert']['raw_text_data']['cleaned_data_folder']
+paraphrased_csv_path=config['paths']['bert']['labels']['paraphrased_label']
+original_csv_path=config['paths']['bert']['labels']['original_label']
+
 
 def logits_pass(encodings): #Function to calculate sentiment of a text chunk
     try:
@@ -59,7 +39,7 @@ def logits_pass(encodings): #Function to calculate sentiment of a text chunk
                 output=model(input_ids=input_ids,attention_mask=attention_mask) #Defines the above parameters into model
                 logits=output.logits.squeeze(1) #Removes all dimensions of size 1 from logits 
                 if agg_logits==None:
-                    agg_logits=logits #Adds logits initially
+                    agglogits=logits #Adds logits initially
                 else:
                     agg_logits=agg_logits+logits #Sumises logits 
                     
@@ -113,10 +93,6 @@ if __name__ == "__main__":
     model = AutoModelForSequenceClassification.from_pretrained("yiyanghkust/finbert-tone") #Loads finbert for classification
     model.to(device)
     model.eval()
-    paraphrased_path="Datasets/Intermediate_Content"
-    original_path="Datasets/Extracted_Content"
-    paraphrased_csv_path="Datasets/paraphrased_labels.csv"
-    original_csv_path="Datasets/label.csv"
     label_extract(paraphrased_path,paraphrased_csv_path)
 
         

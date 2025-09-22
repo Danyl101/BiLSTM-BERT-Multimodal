@@ -19,3 +19,4 @@ class BERT_Classifier(nn.Module):
         logits=self.classifier(dropped)
         probs = torch.softmax(logits, dim=1)
         return probs
+    

@@ -17,8 +17,8 @@ paths:
 
   bert:
     labels:
-        original_data_csv_label: "Datasets/BERT_Data/Labels_Data/label.csv"
-        paraphrased_data_csv_label: "Datasets/BERT_Data/Labels_Data/paraphrased_labels.csv"
+        original_label: "Datasets/BERT_Data/Labels_Data/label.csv"
+        paraphrased_label: "Datasets/BERT_Data/Labels_Data/paraphrased_labels.csv"
 
     raw_text_data:
       raw_data_folder: "Datasets/BERT_Data/Raw_text_data/Raw_data"

@@ -82,7 +82,7 @@ def objective(trial):
                 loss.backward() #Propagates backwards and finds gradients of loss 
                 optimizer.step() #Updates the weights
 
-            # Evaluate
+        # Evaluate
         model.eval()
         preds, truths = [], []
         with torch.no_grad():

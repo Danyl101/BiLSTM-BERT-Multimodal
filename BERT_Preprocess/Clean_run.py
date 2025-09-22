@@ -4,6 +4,8 @@ from utils import pipeline, save_file
 from config_loader import config
 import logging_loader
 
+path=config['paths']['bert']['raw_text_data']['cleaned_data_folder']
+
 
 def run_clean():
     # Get the path to the BERT_CONTENT folder, relative to the current script
@@ -23,7 +25,7 @@ def run_clean():
                 print(f"Processed {filename}:")
                 print(text[:])  # prints entire file 
                 print("="*50)
-                save_file(filename,text) #Saves file
+                save_file(filename,text,path) #Saves file
             else:
                 print(f"Skipped {filename} due to junk detection or empty content.")
 
